@@ -56,7 +56,7 @@ naclmiguelao.pexe: naclmiguelao.bc
 #
 # Makefile target to run the SDK's simple HTTP server and serve this example.
 #
-HTTPD_PY := python $(NACL_SDK_ROOT)/tools/httpd.py
+HTTPD_PY := python ./tools/httpd.py
 
 .PHONY: serve
 serve: all
