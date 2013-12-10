@@ -6,17 +6,18 @@
 class HelloTutorialInstance : public pp::Instance {
  public:
   explicit HelloTutorialInstance(PP_Instance instance) :
-      pp::Instance(instance) {
-    pp::Var var_reply("HelloTutorialInstance:Constructor");
-    PostMessage(var_reply);
-  }
+      pp::Instance(instance) {}
   virtual ~HelloTutorialInstance() {}
 
   virtual void HandleMessage(const pp::Var& var_message) {
     /// DO STUFF!!!
 
-    pp::Var var_reply("HelloTutorialInstance: Oh, someone send me a msg!\n");
+    pp::Var var_reply("HelloTutorialInstance: Oh, someone send me a msg!");
     PostMessage(var_reply);
+
+    pp::Var var_reply2("HelloTutorialInstance: The message was:" +
+                       var_message.AsString());
+    PostMessage(var_reply2);
   }
 };
 
