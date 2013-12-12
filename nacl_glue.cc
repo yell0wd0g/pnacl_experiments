@@ -9,19 +9,26 @@ class NaClGlueInstance : public pp::Instance {
  public:
   explicit NaClGlueInstance(PP_Instance instance) :
       pp::Instance(instance),
-      stitching_() {
+      stitching_(2) {
 
-    std::string version_message("Initialised OpenCV version: ");
-    version_message += stitching_.GetOpenCVVersion();
-    PostMessage(pp::Var(version_message));
+    std::string banner("Initialised OpenCV version: ");
+    banner += stitching_.GetOpenCVVersion();
+
+    bool res = stitching_.InitialiseOpenCV(320, 240);
+    banner += (res ? " - OK" : (" - " + stitching_.last_error()));
+
+    PostMessage(pp::Var(banner));
   }
   virtual ~NaClGlueInstance() {}
 
   virtual void HandleMessage(const pp::Var& var_message) {
-    /// DO STUFF!!!
-    pp::Var var_reply2("I got a message, content was:" +
-                       var_message.AsString());
+    pp::Var var_reply2("I got this message: " +
+                       var_message.AsString() +
+                       " I'm going to calculate the homography.");
     PostMessage(var_reply2);
+
+    bool result = stitching_.CalculateHomography();
+    PostMessage(result ? "Done, OK" : (" - " + stitching_.last_error()));
   }
 
  private:

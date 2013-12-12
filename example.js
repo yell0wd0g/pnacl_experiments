@@ -8,7 +8,7 @@ function moduleDidLoad() {
   // NaCl module's <embed> element.
   //
   // postMessage sends a message to it.
-  common.naclModule.postMessage('hello MiguelaoNaCl!!');
+  common.naclModule.postMessage('Please calculate the homography.');
 }
 
 // This function is called by common.js when a message is received from the

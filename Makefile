@@ -28,10 +28,15 @@ SRCS := stitching.cc nacl_glue.cc
 
 ## Note that OPENCV should have been compiled and installed in the appropriate
 ## NaCl (pnacl, hopefully here) toolching pseudo root. So no need to paste any
-LDFLAGS  += -lopencv_core -lz
+LDFLAGS  += -lopencv_features2d \
+            -lopencv_flann \
+            -lopencv_calib3d \
+            -lopencv_imgproc \
+            -lopencv_core \
+            -lz
 
 # Declare the ALL target first, to make the 'all' target the default build
-all: guard-OPENCV_ROOT nacl_glue.pexe
+all: nacl_glue.pexe
 
 clean:
 	$(RM) *.pexe *.bc *.o
