@@ -39,19 +39,31 @@ LDFLAGS := -L$(NACL_SDK_ROOT)/lib/pnacl/Release -lppapi_cpp -lppapi
 CYGWIN ?= nodosfilewarning
 export CYGWIN
 
+HDRS := stitching.h
+SRCS := stitching.cc nacl_glue.cc
+
+## Note that OPENCV should have been compiled and installed in the appropriate
+## NaCl (pnacl, hopefully here) toolching pseudo root. So no need to paste any
+LDFLAGS  += -lopencv_core
 
 # Declare the ALL target first, to make the 'all' target the default build
-all: naclmiguelao.pexe
+all: guard-OPENCV_ROOT nacl_glue.pexe
 
 clean:
-	$(RM) naclmiguelao.pexe naclmiguelao.bc
+	$(RM) *.pexe *.bc *.o
 
-naclmiguelao.bc: naclmiguelao.cc
-	$(PNACL_CXX) -o $@ $< -O2 $(CXXFLAGS) $(LDFLAGS)
+nacl_glue.bc: $(SRCS) $(HDRS)
+	$(PNACL_CXX) -O2 $(CXXFLAGS) $(SRCS) $(LDFLAGS)   -o $@
 
-naclmiguelao.pexe: naclmiguelao.bc
+nacl_glue.pexe: nacl_glue.bc
 	$(PNACL_FINALIZE) -o $@ $<
 
+
+guard-%:
+	@if [ "${${*}}" == "" ]; then \
+	  echo "***Environment variable $* not set***"; \
+	  exit 1; \
+	fi
 
 #
 # Makefile target to run the SDK's simple HTTP server and serve this example.

@@ -2,7 +2,7 @@
   "program": {
     "portable": {
       "pnacl-translate": {
-        "url": "naclmiguelao.pexe"
+        "url": "nacl_glue.pexe"
       }
     }
   }

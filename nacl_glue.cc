@@ -3,36 +3,43 @@
 #include "ppapi/cpp/module.h"
 #include "ppapi/cpp/var.h"
 
-class HelloTutorialInstance : public pp::Instance {
+#include "stitching.h"
+
+class NaClGlueInstance : public pp::Instance {
  public:
-  explicit HelloTutorialInstance(PP_Instance instance) :
-      pp::Instance(instance) {}
-  virtual ~HelloTutorialInstance() {}
+  explicit NaClGlueInstance(PP_Instance instance) :
+      pp::Instance(instance),
+      stitching_() {
+
+    std::string version_message("Initialised OpenCV version: ");
+    version_message += stitching_.GetOpenCVVersion();
+    PostMessage(pp::Var(version_message));
+  }
+  virtual ~NaClGlueInstance() {}
 
   virtual void HandleMessage(const pp::Var& var_message) {
     /// DO STUFF!!!
-
-    pp::Var var_reply("HelloTutorialInstance: Oh, someone send me a msg!");
-    PostMessage(var_reply);
-
-    pp::Var var_reply2("HelloTutorialInstance: The message was:" +
+    pp::Var var_reply2("I got a message, content was:" +
                        var_message.AsString());
     PostMessage(var_reply2);
   }
+
+ private:
+  Stitching stitching_;
 };
 
-class HelloTutorialModule : public pp::Module {
+class NaClGlueModule : public pp::Module {
  public:
-  HelloTutorialModule() : pp::Module() {}
-  virtual ~HelloTutorialModule() {}
+  NaClGlueModule() : pp::Module() {}
+  virtual ~NaClGlueModule() {}
 
   virtual pp::Instance* CreateInstance(PP_Instance instance) {
-    return new HelloTutorialInstance(instance);
+    return new NaClGlueInstance(instance);
   }
 };
 
 namespace pp {
 Module* CreateModule() {
-  return new HelloTutorialModule();
+  return new NaClGlueModule();
 }
 }  // namespace pp
