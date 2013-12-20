@@ -49,18 +49,12 @@ nacl_glue.pexe: nacl_glue.bc
 
 
 guard-NACL_SDK_ROOT:
-	@if [ "${${*}}" == "" ]; then \
+	@if [ "${NACL_SDK_ROOT}" == "" ]; then \
 	  tput setaf 1; \
 	  echo "Environment variable $* not set, please define it pointing to\
  your nacl_sdk/pepper_XY folder. See \
  http://developers.google.com/native-client/dev/"; \
     tput sgr 0; \
-	  exit 1; \
-	fi
-
-guard-%:
-	@if [ "${${*}}" == "" ]; then \
-	  echo "Environment variable $* not set, and it must be"; \
 	  exit 1; \
 	fi
 

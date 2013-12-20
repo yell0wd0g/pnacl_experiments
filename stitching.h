@@ -6,6 +6,15 @@
 #include <opencv2/core/version.hpp>
 #include <opencv2/features2d/features2d.hpp>
 
+namespace pp{
+class VarArray;
+}
+
+class MessageDispatcher {
+ public:
+  virtual void SendMessage(std::string msg) = 0;
+};
+
 class Stitching{
  public:
   explicit Stitching (int num_images);
@@ -21,6 +30,12 @@ class Stitching{
   const char* GetOpenCVVersion() const { return CV_VERSION; }
   const cv::Mat&  homography() const { return homography_; }
   const std::string& last_error() const { return last_error_; }
+
+  const void SetMessageHandler(MessageDispatcher* handler) {
+    msg_handler_ = handler;
+  }
+  const void SetImageData(
+      int idx, int height, int width, const pp::VarArray& array) ;
 
  private:
   // Only 2 images supported ATM, checked in InitialiseOpenCV()
@@ -41,6 +56,8 @@ class Stitching{
   cv::Mat homography_;
 
   std::string last_error_;
+
+  MessageDispatcher* msg_handler_;
 };
 
 

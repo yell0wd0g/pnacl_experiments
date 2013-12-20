@@ -36,6 +36,60 @@ for the example.
   This element will be populated with the messages that come from the NaCl
   module. See example.js.
   -->
-  <div id="log" style="display:none" ></div>
+  <div id="log" style="display:none"></div>
+
+  <!--
+  The following elements are a clumsy way to get a video tag and a canvas of it
+  -->
+  <button id="btn_click" onclick="start()" disabled="true">
+    Start video tags
+  </button>
+
+  <video id="vid1" autoplay="true"></video>
+  <canvas id="canvas1" width="320" height="240" style="display:none"></canvas>
+  <video id="vid2" autoplay="true"></video>
+  <canvas id="canvas2" width="320" height="240" style="display:none"></canvas>
+
+  <script>
+    video1= document.getElementById("vid1");
+    var constraints1 ={
+        "audio": false,
+        "video": {
+          "optional": [
+            { "sourceId": "cad43585c8283e724b18a25379b7b09573a9eab0bbd9c665a2208b23441dc01" } ],
+          "mandatory": { "maxWidth": "320", "maxHeight": "240"}
+        }
+    }
+    video2= document.getElementById("vid2");
+    var constraints2 ={
+        "audio": false,
+        "video": {
+          "optional": [
+            { "sourceId": "488633a95349734be30fc2fea50bcaa7dfb5411985bcaf2ed34af9804b6410c" } ],
+          "mandatory": { "maxWidth": "320", "maxHeight": "240"}
+        }
+    }
+    function start() {
+      navigator.webkitGetUserMedia(constraints1, gotStream1,  getUserMediaError);
+      navigator.webkitGetUserMedia(constraints2, gotStream2,  getUserMediaError);
+      btn_click.disabled = true;
+    }
+    function gotStream1(stream) {
+      video1.src = webkitURL.createObjectURL(stream);
+    }
+    function gotStream2(stream) {
+      video2.src = webkitURL.createObjectURL(stream);
+    }
+    function getUserMediaError(e) {
+      alert('Error during webkitGetUserMedia: '+e);
+    }
+  </script>
+
+
+  <br>
+  <button id="btn_calibrate" onclick="calibrate()" disabled="true">
+    Calibrate, you evil monster!
+   </button>
+
 </body>
 </html>

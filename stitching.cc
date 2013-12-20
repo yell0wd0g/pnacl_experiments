@@ -2,6 +2,10 @@
 #include "stitching.h"
 
 #include <opencv2/calib3d/calib3d.hpp>  // CV_RANSAC
+#include <string.h>
+
+#include "ppapi/cpp/var.h"
+#include "ppapi/cpp/var_array.h"
 
 namespace {
 const int kAllowedNumberOfImages = 2;
@@ -47,18 +51,22 @@ bool Stitching::CalculateHomography() {
   last_error_.clear();
 
   double t_0 = (double)cv::getTickCount();
+  msg_handler_->SendMessage("I'm ok 1");
 
   // Extract keypoints from image. This is expensive compared to the other ops.
   detector_->detect(*input_img_[0], keypoints_[0]);
   detector_->detect(*input_img_[1], keypoints_[1]);
+  msg_handler_->SendMessage("I'm ok 2");
 
   // Now let's compute the descriptors.
   extractor_->compute(*input_img_[0], keypoints_[0], *descriptors_[0]);
   extractor_->compute(*input_img_[1], keypoints_[1], *descriptors_[1]);
+  msg_handler_->SendMessage("I'm ok 3");
 
   // Let's match the descriptors.
   matches_.clear();
   matcher_->match(*descriptors_[0], *descriptors_[1], matches_);
+  msg_handler_->SendMessage("I'm ok 4");
 
   // Quick calculation of max and min distances between keypoints
   double max_dist = 0; double min_dist = 100;
@@ -67,6 +75,7 @@ bool Stitching::CalculateHomography() {
     if( dist < min_dist ) min_dist = dist;
     if( dist > max_dist ) max_dist = dist;
   }
+  msg_handler_->SendMessage("I'm ok 5");
 
   // Use only "good" matches (i.e. whose distance is less than 3*min_dist )
   cv::vector<cv::DMatch> new_good_matches;
@@ -76,6 +85,7 @@ bool Stitching::CalculateHomography() {
     }
   }
   if (new_good_matches.size() > 10) good_matches_ = new_good_matches;
+  msg_handler_->SendMessage("I'm ok 6");
 
   // Redistribute feature points according to selected matches.
   std::vector<cv::Point2f> obj;
@@ -98,4 +108,12 @@ bool Stitching::CalculateHomography() {
     double t = ((double)cv::getTickCount() - t)/cv::getTickFrequency();
 
   return ret;
+}
+
+const void Stitching::SetImageData(
+    int idx, int height, int width, const pp::VarArray& array) {
+  msg_handler_->SendMessage("Setting contents of input matrix ");
+  for (int i=0; i<height; i++)
+    for (int j=0; j<width; j++)
+      input_img_[idx]->at<int>(i,j) = array.Get(i*width+j).AsInt();
 }
