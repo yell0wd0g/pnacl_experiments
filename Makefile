@@ -1,8 +1,8 @@
 #
-# If NACL_SDK_ROOT is not set, then assume it can be found three directories up.
+# If NACL_SDK_ROOT is not set, then fail with a nice message.
 #
 THIS_MAKEFILE := $(abspath $(lastword $(MAKEFILE_LIST)))
-NACL_SDK_ROOT ?= $(abspath $(dir $(THIS_MAKEFILE))../..)
+#NACL_SDK_ROOT ?= $(abspath $(dir $(THIS_MAKEFILE))../..)
 
 # Project Build flags
 WARNINGS := -Wno-long-long -Wall -Wswitch-enum -pedantic -Werror
@@ -36,7 +36,7 @@ LDFLAGS  += -lopencv_features2d \
             -lz
 
 # Declare the ALL target first, to make the 'all' target the default build
-all: nacl_glue.pexe
+all: guard-NACL_SDK_ROOT nacl_glue.pexe
 
 clean:
 	$(RM) *.pexe *.bc *.o
@@ -48,9 +48,19 @@ nacl_glue.pexe: nacl_glue.bc
 	$(PNACL_FINALIZE) -o $@ $<
 
 
+guard-NACL_SDK_ROOT:
+	@if [ "${${*}}" == "" ]; then \
+	  tput setaf 1; \
+	  echo "Environment variable $* not set, please define it pointing to\
+ your nacl_sdk/pepper_XY folder. See \
+ http://developers.google.com/native-client/dev/"; \
+    tput sgr 0; \
+	  exit 1; \
+	fi
+
 guard-%:
 	@if [ "${${*}}" == "" ]; then \
-	  echo "***Environment variable $* not set***"; \
+	  echo "Environment variable $* not set, and it must be"; \
 	  exit 1; \
 	fi
 
