@@ -40,6 +40,7 @@ class Stitching{
  private:
   // Only 2 images supported ATM, checked in InitialiseOpenCV()
   int num_images_;
+  std::vector<cv::Mat*> input_img_rgb_;
   std::vector<cv::Mat*> input_img_;
   cv::Size image_size_;
 

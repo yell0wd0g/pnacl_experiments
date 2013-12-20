@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <opencv2/imgproc/imgproc.hpp>  // cvtColor
 #include <opencv2/calib3d/calib3d.hpp>  // CV_RANSAC
 
 #include "ppapi/cpp/var.h"
@@ -29,6 +30,7 @@ bool Stitching::InitialiseOpenCV(int width, int height) {
   image_size_ = cv::Size(width, height);
 
   for (int i = 0; i < num_images_; ++i) {
+    input_img_rgb_.push_back(new cv::Mat(height, width, CV_8UC3));
     input_img_.push_back(new cv::Mat(height, width, CV_8UC1));
   }
 
@@ -121,7 +123,12 @@ bool Stitching::CalculateHomography() {
 const void Stitching::SetImageData(
     int idx, int height, int width, const pp::VarArray& array) {
   msg_handler_->SendMessage(print(idx));
-  for (int i=0; i<height; i++)
-    for (int j=0; j<width; j++)
-      input_img_[idx]->at<uchar>(i,j) = array.Get(i*width+j).AsInt();
+  for (int i=0; i<height; i++) {
+    for (int j=0; j<width; j++) {
+      input_img_rgb_[idx]->at<cv::Vec3b>(i,j)[0] = array.Get(3*(i*width+j)+0).AsInt();
+      input_img_rgb_[idx]->at<cv::Vec3b>(i,j)[1] = array.Get(3*(i*width+j)+1).AsInt();
+      input_img_rgb_[idx]->at<cv::Vec3b>(i,j)[2] = array.Get(3*(i*width+j)+2).AsInt();
+    }
+  }
+  cv::cvtColor(*input_img_rgb_[idx], *input_img_[idx], CV_RGB2GRAY);
 }
