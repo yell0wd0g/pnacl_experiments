@@ -1,14 +1,21 @@
 
 #include "stitching.h"
 
-#include <opencv2/calib3d/calib3d.hpp>  // CV_RANSAC
+#include <stdio.h>
 #include <string.h>
+
+#include <opencv2/calib3d/calib3d.hpp>  // CV_RANSAC
 
 #include "ppapi/cpp/var.h"
 #include "ppapi/cpp/var_array.h"
 
 namespace {
 const int kAllowedNumberOfImages = 2;
+std::string print(int i) {
+  char buffer[100];
+  sprintf(buffer, "%d", i);
+  return(std::string(buffer));
+}
 }
 
 Stitching::Stitching(int num_images)
@@ -55,8 +62,9 @@ bool Stitching::CalculateHomography() {
 
   // Extract keypoints from image. This is expensive compared to the other ops.
   detector_->detect(*input_img_[0], keypoints_[0]);
+  msg_handler_->SendMessage("I'm ok 2a");
   detector_->detect(*input_img_[1], keypoints_[1]);
-  msg_handler_->SendMessage("I'm ok 2");
+  msg_handler_->SendMessage("I'm ok 2b");
 
   // Now let's compute the descriptors.
   extractor_->compute(*input_img_[0], keypoints_[0], *descriptors_[0]);
@@ -112,8 +120,8 @@ bool Stitching::CalculateHomography() {
 
 const void Stitching::SetImageData(
     int idx, int height, int width, const pp::VarArray& array) {
-  msg_handler_->SendMessage("Setting contents of input matrix ");
+  msg_handler_->SendMessage(print(idx));
   for (int i=0; i<height; i++)
     for (int j=0; j<width; j++)
-      input_img_[idx]->at<int>(i,j) = array.Get(i*width+j).AsInt();
+      input_img_[idx]->at<uchar>(i,j) = array.Get(i*width+j).AsInt();
 }

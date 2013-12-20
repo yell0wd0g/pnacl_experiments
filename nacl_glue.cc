@@ -33,14 +33,14 @@ class NaClGlueInstance : public pp::Instance, public MessageDispatcher {
       SendMessage("I got an int");
     } else if (var_message.is_double()) {
       next_data_index_ = static_cast<int>(var_message.AsDouble());
-      SendMessage("Got a double, which I take as index of the next data");
+      SendMessage("Got a double, which I take as index of the next buffer");
     } else if (var_message.is_array()) {
 
-      if (next_data_index_>0 && next_data_index_<2) {
+      if (next_data_index_>=0 && next_data_index_<2) {
         pp::VarArray array(var_message.pp_var());
         stitching_.SetImageData(next_data_index_, 240, 320, array);
 
-        SendMessage("I got an array, passed as an image");
+        SendMessage("I got an array, which I take as an image");
       } else {
         SendMessage("The index was out of bounds.");
       }
