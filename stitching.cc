@@ -35,15 +35,24 @@ bool Stitching::InitialiseOpenCV(int width, int height) {
     input_img_.push_back(new cv::Mat(height, width, CV_8UC1));
   }
 
+  // Not all combinations of Feature Detector - Extractor - Matcher would work,
+  // see http://stackoverflow.com/questions/14808429/classification-of-detectors-extractors-and-matchers/14912160
+  // resumed here:
+  // (FAST, SURF) / SURF / FlannBased  <-- in "flann" OpenCV module.
+  // (FAST, SIFT) / SIFT / FlannBased
+  // (FAST, ORB) / ORB / Bruteforce    <-- BruteForce in OpenCV legacy module.
+  // (FAST, ORB) / BRIEF / Bruteforce
+  // (FAST, SURF) / FREAK / Bruteforce
+
   detector_ = cv::FeatureDetector::create("FAST");
   if (!detector_)
     last_error_ += "Creating feature detector failed. ";
 
-  extractor_ = cv::DescriptorExtractor::create("FREAK");
+  extractor_ = cv::DescriptorExtractor::create("ORB");
   if (!extractor_)
     last_error_ += "Creating feature descriptor extractor failed. ";
 
-  matcher_ = cv::DescriptorMatcher::create("FlannBased");
+  matcher_ = cv::DescriptorMatcher::create("BruteForce");
   if (!matcher_)
     last_error_ += "Creating feature matcher failed. ";
 
@@ -65,18 +74,21 @@ bool Stitching::CalculateHomography() {
 
   // Extract keypoints from image. This is expensive compared to the other ops.
   detector_->detect(*input_img_[0], keypoints_[0]);
-  msg_handler_->SendMessage("Detected keypoints image 0");
+  msg_handler_->SendMessage("Detected keypoints image 0: " +
+      print(keypoints_[0].size()));
   detector_->detect(*input_img_[1], keypoints_[1]);
-  msg_handler_->SendMessage("Detected keypoints image 1");
+  msg_handler_->SendMessage("Detected keypoints image 1: " +
+      print(keypoints_[1].size()));
 
   // Now let's compute the descriptors.
   extractor_->compute(*input_img_[0], keypoints_[0], *descriptors_[0]);
   extractor_->compute(*input_img_[1], keypoints_[1], *descriptors_[1]);
-  msg_handler_->SendMessage("Computed descriptors");
+  msg_handler_->SendMessage("Computed descriptors: " +
+      print(descriptors_[0]->rows) + " and " + print(descriptors_[1]->rows));
 
   // Let's match the descriptors.
   matches_.clear();
-  matcher_->match(*descriptors_[0], *descriptors_[1], matches_);
+  //matcher_->match(*descriptors_[0], *descriptors_[1], matches_);
   msg_handler_->SendMessage("Matched descriptors");
 
   // Quick calculation of max and min distances between keypoints

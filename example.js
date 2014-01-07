@@ -46,6 +46,7 @@ function calibrate() {
 
   for(var i=0; i<2; i++) {
     if (video[i].readyState === video[i].HAVE_ENOUGH_DATA) {
+      videoImageContext[i].drawImage(video[i], 0, 0, 320, 240);
       imageData[i] = videoImageContext[i].getImageData(0, 0, 320, 240);
 
       // After the NaCl module has loaded, common.naclModule is a reference to

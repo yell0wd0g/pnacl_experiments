@@ -30,7 +30,9 @@ SRCS := stitching.cc nacl_glue.cc
 ## NaCl (pnacl, hopefully here) toolching pseudo root. So no need to paste any
 CXXFLAGS += -I../naclports/src/out/repository/opencv-2.4.7/include/
 LDFLAGS  += -lopencv_features2d \
-            -lopencv_flann \
+	          -lopencv_nonfree \
+	          -lopencv_flann \
+            -lopencv_legacy \
             -lopencv_calib3d \
             -lopencv_imgproc \
             -lopencv_core \
@@ -40,7 +42,7 @@ LDFLAGS  += -lopencv_features2d \
 all: guard-NACL_SDK_ROOT nacl_glue.pexe
 
 clean:
-	$(RM) *.pexe *.bc *.o
+	$(RM) *.pexe *.bc
 
 nacl_glue.bc: $(SRCS) $(HDRS)
 	$(PNACL_CXX) -O2 $(CXXFLAGS) $(SRCS) $(LDFLAGS)   -o $@
