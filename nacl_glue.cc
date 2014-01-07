@@ -3,6 +3,8 @@
 #include "ppapi/cpp/module.h"
 #include "ppapi/cpp/var.h"
 #include "ppapi/cpp/var_array.h"
+#include "ppapi/cpp/var_dictionary.h"
+#include "ppapi/cpp/var_array_buffer.h"
 
 #include "stitching.h"
 
@@ -10,8 +12,7 @@ class NaClGlueInstance : public pp::Instance, public MessageDispatcher {
  public:
   explicit NaClGlueInstance(PP_Instance instance) :
       pp::Instance(instance),
-      stitching_(2),
-      next_data_index_(0) {
+      stitching_(2) {
 
     std::string banner("Initialised OpenCV version: ");
     banner += stitching_.GetOpenCVVersion();
@@ -29,21 +30,23 @@ class NaClGlueInstance : public pp::Instance, public MessageDispatcher {
 
       bool result = stitching_.CalculateHomography();
       SendMessage(result ? "Done, OK" : (" - " + stitching_.last_error()));
-    } else if (var_message.is_int()) {
-      SendMessage("I got an int");
-    } else if (var_message.is_double()) {
-      next_data_index_ = static_cast<int>(var_message.AsDouble());
-      SendMessage("Got a double, which I take as index of the next buffer");
-    } else if (var_message.is_array()) {
-
-      if (next_data_index_>=0 && next_data_index_<2) {
-        pp::VarArray array(var_message.pp_var());
-        stitching_.SetImageData(next_data_index_, 240, 320, array);
-
-        SendMessage("I got an array, which I take as an image");
-      } else {
-        SendMessage("The index was out of bounds.");
+    } else if (var_message.is_dictionary()) {
+      SendMessage("I got a dictionary with image and its index");
+      pp::VarDictionary dictionary(var_message);
+      std::string message = dictionary.Get("message").AsString();
+      if (message == "data") {
+        int width = dictionary.Get("width").AsInt();
+        int height = dictionary.Get("height").AsInt();
+        int index = dictionary.Get("index").AsInt();
+        pp::VarArrayBuffer array_buffer(dictionary.Get("data"));
+        if (index >=0 && index < 2 && width > 0 && height > 0) {
+          uint32_t* pixels = static_cast<uint32_t*>(array_buffer.Map());
+          stitching_.SetImageData(index, height, width, pixels);
+          array_buffer.Unmap();
+        }
       }
+    } else {
+      SendMessage("I got some message from JS I don't understand.");
     }
   }
 
@@ -53,8 +56,6 @@ class NaClGlueInstance : public pp::Instance, public MessageDispatcher {
 
  private:
   Stitching stitching_;
-  int next_data_index_;
-
 };
 
 class NaClGlueModule : public pp::Module {

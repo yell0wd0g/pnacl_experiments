@@ -51,8 +51,11 @@ function calibrate() {
       // After the NaCl module has loaded, common.naclModule is a reference to
       // the NaCl module's <embed> element. Method postMessage sends a message
       // to it. F.i.:
-      common.naclModule.postMessage(i);
-      common.naclModule.postMessage(imageData);
+      common.naclModule.postMessage({'message' : 'data',
+                                     'index' : i,
+                                     'width' : 320,
+                                     'height' : 240,
+                                     'data' : imageData[i].data.buffer});
     }
   }
 

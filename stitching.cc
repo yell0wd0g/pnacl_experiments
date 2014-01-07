@@ -30,6 +30,7 @@ bool Stitching::InitialiseOpenCV(int width, int height) {
   image_size_ = cv::Size(width, height);
 
   for (int i = 0; i < num_images_; ++i) {
+    input_img_rgba_.push_back(new cv::Mat(height, width, CV_8UC4));
     input_img_rgb_.push_back(new cv::Mat(height, width, CV_8UC3));
     input_img_.push_back(new cv::Mat(height, width, CV_8UC1));
   }
@@ -60,23 +61,23 @@ bool Stitching::CalculateHomography() {
   last_error_.clear();
 
   double t_0 = (double)cv::getTickCount();
-  msg_handler_->SendMessage("I'm ok 1");
+  msg_handler_->SendMessage("Starting homography calculation");
 
   // Extract keypoints from image. This is expensive compared to the other ops.
   detector_->detect(*input_img_[0], keypoints_[0]);
-  msg_handler_->SendMessage("I'm ok 2a");
+  msg_handler_->SendMessage("Detected keypoints image 0");
   detector_->detect(*input_img_[1], keypoints_[1]);
-  msg_handler_->SendMessage("I'm ok 2b");
+  msg_handler_->SendMessage("Detected keypoints image 1");
 
   // Now let's compute the descriptors.
   extractor_->compute(*input_img_[0], keypoints_[0], *descriptors_[0]);
   extractor_->compute(*input_img_[1], keypoints_[1], *descriptors_[1]);
-  msg_handler_->SendMessage("I'm ok 3");
+  msg_handler_->SendMessage("Computed descriptors");
 
   // Let's match the descriptors.
   matches_.clear();
   matcher_->match(*descriptors_[0], *descriptors_[1], matches_);
-  msg_handler_->SendMessage("I'm ok 4");
+  msg_handler_->SendMessage("Matched descriptors");
 
   // Quick calculation of max and min distances between keypoints
   double max_dist = 0; double min_dist = 100;
@@ -85,7 +86,7 @@ bool Stitching::CalculateHomography() {
     if( dist < min_dist ) min_dist = dist;
     if( dist > max_dist ) max_dist = dist;
   }
-  msg_handler_->SendMessage("I'm ok 5");
+  msg_handler_->SendMessage("Calculated min-max descriptor distance");
 
   // Use only "good" matches (i.e. whose distance is less than 3*min_dist )
   cv::vector<cv::DMatch> new_good_matches;
@@ -95,7 +96,7 @@ bool Stitching::CalculateHomography() {
     }
   }
   if (new_good_matches.size() > 10) good_matches_ = new_good_matches;
-  msg_handler_->SendMessage("I'm ok 6");
+  msg_handler_->SendMessage("Filtered descriptor pairs");
 
   // Redistribute feature points according to selected matches.
   std::vector<cv::Point2f> obj;
@@ -121,14 +122,8 @@ bool Stitching::CalculateHomography() {
 }
 
 const void Stitching::SetImageData(
-    int idx, int height, int width, const pp::VarArray& array) {
-  msg_handler_->SendMessage(print(idx));
-  for (int i=0; i<height; i++) {
-    for (int j=0; j<width; j++) {
-      input_img_rgb_[idx]->at<cv::Vec3b>(i,j)[0] = array.Get(3*(i*width+j)+0).AsInt();
-      input_img_rgb_[idx]->at<cv::Vec3b>(i,j)[1] = array.Get(3*(i*width+j)+1).AsInt();
-      input_img_rgb_[idx]->at<cv::Vec3b>(i,j)[2] = array.Get(3*(i*width+j)+2).AsInt();
-    }
-  }
+    int idx, int height, int width, const uint32_t* array) {
+  memcpy(input_img_rgba_[idx]->ptr(), array, height * width * 4);
+  cv::cvtColor(*input_img_rgba_[idx], *input_img_rgb_[idx], CV_RGBA2RGB);
   cv::cvtColor(*input_img_rgb_[idx], *input_img_[idx], CV_RGB2GRAY);
 }

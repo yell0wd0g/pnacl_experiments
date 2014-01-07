@@ -35,11 +35,12 @@ class Stitching{
     msg_handler_ = handler;
   }
   const void SetImageData(
-      int idx, int height, int width, const pp::VarArray& array) ;
+      int idx, int height, int width, const uint32_t* array) ;
 
  private:
   // Only 2 images supported ATM, checked in InitialiseOpenCV()
   int num_images_;
+  std::vector<cv::Mat*> input_img_rgba_;
   std::vector<cv::Mat*> input_img_rgb_;
   std::vector<cv::Mat*> input_img_;
   cv::Size image_size_;

@@ -28,6 +28,7 @@ SRCS := stitching.cc nacl_glue.cc
 
 ## Note that OPENCV should have been compiled and installed in the appropriate
 ## NaCl (pnacl, hopefully here) toolching pseudo root. So no need to paste any
+CXXFLAGS += -I../naclports/src/out/repository/opencv-2.4.7/include/
 LDFLAGS  += -lopencv_features2d \
             -lopencv_flann \
             -lopencv_calib3d \
