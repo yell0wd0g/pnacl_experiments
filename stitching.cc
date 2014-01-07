@@ -88,27 +88,31 @@ bool Stitching::CalculateHomography() {
 
   // Let's match the descriptors.
   matches_.clear();
-  //matcher_->match(*descriptors_[0], *descriptors_[1], matches_);
-  msg_handler_->SendMessage("Matched descriptors");
+  matcher_->match(*descriptors_[0], *descriptors_[1], matches_);
+  msg_handler_->SendMessage("Matched descriptors, #matches: " +
+    print(matches_.size()));
 
   // Quick calculation of max and min distances between keypoints
-  double max_dist = 0; double min_dist = 100;
-  for( int i = 0; i < descriptors_[0]->rows; i++ ) {
-    double dist = matches_[i].distance;
-    if( dist < min_dist ) min_dist = dist;
-    if( dist > max_dist ) max_dist = dist;
-  }
-  msg_handler_->SendMessage("Calculated min-max descriptor distance");
+  //double max_dist = -1.0; double min_dist = 1000.0;
+  //for( int i = 0; i < descriptors_[0]->rows; i++ ) {
+  //  double dist = matches_[i].distance;
+  //  if( dist < min_dist ) min_dist = dist;
+  //  if( dist > max_dist ) max_dist = dist;
+  //}
+  //msg_handler_->SendMessage("Calculated min-max descriptor distance, min=" +
+  //  print(min_dist) + " max=" + print(max_dist) );
 
   // Use only "good" matches (i.e. whose distance is less than 3*min_dist )
-  cv::vector<cv::DMatch> new_good_matches;
-  for( int i = 0; i < descriptors_[0]->rows; i++ ) {
-    if( matches_[i].distance < 2*min_dist ) {
-      new_good_matches.push_back(matches_[i]);
-    }
-  }
-  if (new_good_matches.size() > 10) good_matches_ = new_good_matches;
-  msg_handler_->SendMessage("Filtered descriptor pairs");
+  //cv::vector<cv::DMatch> new_good_matches;
+  //for( int i = 0; i < descriptors_[0]->rows; i++ ) {
+  //  if( matches_[i].distance < 10*min_dist ) {
+  //    new_good_matches.push_back(matches_[i]);
+  //  }
+  //}
+  //if (new_good_matches.size() > 10) good_matches_ = new_good_matches;
+  //msg_handler_->SendMessage("Filtered descriptor pairs, matches: " +
+  //  print(good_matches_.size()));
+  good_matches_ = matches_;
 
   // Redistribute feature points according to selected matches.
   std::vector<cv::Point2f> obj;
@@ -121,14 +125,16 @@ bool Stitching::CalculateHomography() {
   // Find the Homography Matrix, if we have enough points.
   if (good_matches_.size() > 10) {
     homography_ = findHomography(obj, scene, CV_RANSAC);
+
+    if (cv::getTickFrequency() > 1.0) {
+      double t = ((double)cv::getTickCount() - t_0)/cv::getTickFrequency();
+      msg_handler_->SendMessage("Homography calculated in: " +
+          print(t*1000000) + "ns");
+    }
   } else {
     ret = false;
     last_error_ = "Not enough features for homography calculation. ";
   }
-
-  // Check how long did it take.
-  if (cv::getTickFrequency() > 1.0)
-    double t = ((double)cv::getTickCount() - t)/cv::getTickFrequency();
 
   return ret;
 }
