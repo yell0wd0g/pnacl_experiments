@@ -9,6 +9,7 @@
 namespace pp{
 class Var;
 class VarArray;
+class VarDictionary;
 }
 
 // This class is used by Stitching to send string messages back to JS side.
@@ -17,6 +18,7 @@ class VarArray;
 class MessageDispatcher {
  public:
   virtual void SendMessage(std::string msg) = 0;
+  virtual void SendMessage(pp::VarDictionary dic) = 0;
 };
 
 class Stitching{
@@ -31,7 +33,8 @@ class Stitching{
   // have been called and succeeded previously.
   bool CalculateHomography();
 
-  void PostUpdateMessage(const char* message_name, double value);
+  void PostHomographyValue(
+      const char* message_name, int row, int col, double value);
 
   const char* GetOpenCVVersion() const { return CV_VERSION; }
   const cv::Mat&  homography() const { return homography_; }

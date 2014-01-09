@@ -4,6 +4,8 @@ var videoImage = [];
 var videoImageContext = [];
 var imageData = [];
 
+var homography = [[],[],[]];
+
 // This function is called by common.js when the NaCl module is loaded.
 function moduleDidLoad() {
   // Once we load, hide the plugin. In this example, we don't display anything
@@ -17,13 +19,24 @@ function moduleDidLoad() {
 // This function is called by common.js when a message is received from the
 // NaCl module.
 function handleMessage(message) {
+  // Via this single communication channel comes messages to dump to console and
+  // hopefully the H matrix as well, coefficient by coefficient.
+  if (message.data['message'] == "H") {
+    // Uncomment next line for Debug:
+    //console.log(message.data['row'] +" " +message.data['column'] +" "+message.data['value']);
 
-  // Dump stuff to special PNaCl output area.
-  var logEl = document.getElementById('log');
-  logEl.textContent += message.data;
+    // |row|, |column| range from 0 to 2 and value is float.
+    homography[message.data['row']][message.data['column']] =
+        message.data['value'];
+  } else {
+    // Dump stuff to special PNaCl output area.
+    var logEl = document.getElementById('log');
+    logEl.textContent += message.data;
 
-  // Or to JS Console.
-  console.log(message.data);
+    // And/Or to JS Console.
+    console.log(message.data);
+  }
+
 }
 
 // Calibrate does a whole lot of things: Plugs the <video> tags into their

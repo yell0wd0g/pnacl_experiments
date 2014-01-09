@@ -39,11 +39,11 @@ bool Stitching::InitialiseOpenCV(int width, int height) {
   // Not all combinations of Feature Detector - Extractor - Matcher would work,
   // see http://stackoverflow.com/questions/14808429/classification-of-detectors-extractors-and-matchers/14912160
   // resumed here:
-  // (FAST, SURF) / SURF / FlannBased  <-- in "flann" OpenCV module.
-  // (FAST, SIFT) / SIFT / FlannBased
-  // (FAST, ORB) / ORB / Bruteforce    <-- BruteForce in OpenCV legacy module.
-  // (FAST, ORB) / BRIEF / Bruteforce
-  // (FAST, SURF) / FREAK / Bruteforce
+  // (FAST, SURF) / SURF  / FlannBased  <-- in "flann" OpenCV module.
+  // (FAST, SIFT) / SIFT  / FlannBased
+  // (FAST, ORB)  / ORB   / BruteForce  <-- BruteForce in OpenCV legacy module.
+  // (FAST, ORB)  / BRIEF / BruteForce
+  // (FAST, SURF) / FREAK / BruteForce
 
   detector_ = cv::FeatureDetector::create("FAST");
   if (!detector_)
@@ -53,7 +53,7 @@ bool Stitching::InitialiseOpenCV(int width, int height) {
   if (!extractor_)
     last_error_ += "Creating feature descriptor extractor failed. ";
 
-  matcher_ = cv::DescriptorMatcher::create("Bruteforce");
+  matcher_ = cv::DescriptorMatcher::create("BruteForce");
   if (!matcher_)
     last_error_ += "Creating feature matcher failed. ";
 
@@ -132,9 +132,13 @@ bool Stitching::CalculateHomography() {
       msg_handler_->SendMessage("Homography calculated in: " +
           print(t*1000000) + "ns");
     }
-    msg_handler_->SendMessage("[[" + print(homography_.at<double>(0,0)) + print(homography_.at<double>(0,1)) + print(homography_.at<double>(0,2)) + ']');
-    msg_handler_->SendMessage(" [" + print(homography_.at<double>(1,0)) + print(homography_.at<double>(1,1)) + print(homography_.at<double>(1,2)) + ']');
-    msg_handler_->SendMessage(" [" + print(homography_.at<double>(2,0)) + print(homography_.at<double>(2,1)) + print(homography_.at<double>(2,2)) + "]]");
+    msg_handler_->SendMessage("H=[[" + print(homography_.at<double>(0,0)) + print(homography_.at<double>(0,1)) + print(homography_.at<double>(0,2)) + ']');
+    msg_handler_->SendMessage("   [" + print(homography_.at<double>(1,0)) + print(homography_.at<double>(1,1)) + print(homography_.at<double>(1,2)) + ']');
+    msg_handler_->SendMessage("   [" + print(homography_.at<double>(2,0)) + print(homography_.at<double>(2,1)) + print(homography_.at<double>(2,2)) + "]]");
+
+    for (int row = 0; row < 3; ++row)
+      for ( int column=0; column < 3; ++column)
+        PostHomographyValue("H", row, column, homography_.at<double>(row, column));
 
   } else {
     ret = false;
@@ -144,12 +148,14 @@ bool Stitching::CalculateHomography() {
   return ret;
 }
 
-// PostUpdateMessage() helper function for sending small messages to JS.
-void Stitching::PostUpdateMessage(const char* message_name, double value) {
-//  pp::VarDictionary message_dic;
-//  message_dic.Set("message", message_name);
-//  message_dic.Set("value", value);
-//  msg_handler_->PostMessage(message_dic.pp_var());
+void Stitching::PostHomographyValue(
+  const char* message_name, int row, int col, double value) {
+  pp::VarDictionary message_dic;
+  message_dic.Set("message", message_name);
+  message_dic.Set("row", row);
+  message_dic.Set("column", col);
+  message_dic.Set("value", value);
+  msg_handler_->SendMessage(message_dic);
 }
 
 const void Stitching::SetImageData(

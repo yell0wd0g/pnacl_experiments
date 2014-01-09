@@ -26,10 +26,10 @@ class NaClGlueInstance : public pp::Instance, public MessageDispatcher {
 
   virtual void HandleMessage(const pp::Var& var_message) {
     if (var_message.is_string()) {
-      SendMessage(var_message.AsString());
-
+      SendMessage("Command: " + var_message.AsString());
       bool result = stitching_.CalculateHomography();
       SendMessage(result ? "Done, OK" : (" - " + stitching_.last_error()));
+
     } else if (var_message.is_dictionary()) {
       SendMessage("I got a dictionary with image and its index");
       pp::VarDictionary dictionary(var_message);
@@ -50,8 +50,14 @@ class NaClGlueInstance : public pp::Instance, public MessageDispatcher {
     }
   }
 
-  virtual void SendMessage(std::string msg) {
-    PostMessage(pp::Var(msg));
+  // MessageDispatcher interface method.
+  virtual void SendMessage(std::string message) {
+    PostMessage(pp::Var(message));
+  }
+
+  // MessageDispatcher interface method.
+  virtual void SendMessage(pp::VarDictionary dictionary) {
+    PostMessage(pp::Var(dictionary.pp_var()));
   }
 
  private:
