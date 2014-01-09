@@ -9,6 +9,7 @@
 
 #include "ppapi/cpp/var.h"
 #include "ppapi/cpp/var_array.h"
+#include "ppapi/cpp/var_dictionary.h"
 
 namespace {
 const int kAllowedNumberOfImages = 2;
@@ -48,11 +49,11 @@ bool Stitching::InitialiseOpenCV(int width, int height) {
   if (!detector_)
     last_error_ += "Creating feature detector failed. ";
 
-  extractor_ = cv::DescriptorExtractor::create("ORB");
+  extractor_ = cv::DescriptorExtractor::create("FREAK");
   if (!extractor_)
     last_error_ += "Creating feature descriptor extractor failed. ";
 
-  matcher_ = cv::DescriptorMatcher::create("BruteForce");
+  matcher_ = cv::DescriptorMatcher::create("Bruteforce");
   if (!matcher_)
     last_error_ += "Creating feature matcher failed. ";
 
@@ -131,12 +132,24 @@ bool Stitching::CalculateHomography() {
       msg_handler_->SendMessage("Homography calculated in: " +
           print(t*1000000) + "ns");
     }
+    msg_handler_->SendMessage("[[" + print(homography_.at<double>(0,0)) + print(homography_.at<double>(0,1)) + print(homography_.at<double>(0,2)) + ']');
+    msg_handler_->SendMessage(" [" + print(homography_.at<double>(1,0)) + print(homography_.at<double>(1,1)) + print(homography_.at<double>(1,2)) + ']');
+    msg_handler_->SendMessage(" [" + print(homography_.at<double>(2,0)) + print(homography_.at<double>(2,1)) + print(homography_.at<double>(2,2)) + "]]");
+
   } else {
     ret = false;
     last_error_ = "Not enough features for homography calculation. ";
   }
 
   return ret;
+}
+
+// PostUpdateMessage() helper function for sending small messages to JS.
+void Stitching::PostUpdateMessage(const char* message_name, double value) {
+//  pp::VarDictionary message_dic;
+//  message_dic.Set("message", message_name);
+//  message_dic.Set("value", value);
+//  msg_handler_->PostMessage(message_dic.pp_var());
 }
 
 const void Stitching::SetImageData(

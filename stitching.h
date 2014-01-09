@@ -7,9 +7,13 @@
 #include <opencv2/features2d/features2d.hpp>
 
 namespace pp{
+class Var;
 class VarArray;
 }
 
+// This class is used by Stitching to send string messages back to JS side.
+// It is set into Stitching class via SetMessageHandler, and normaly it'll be
+// implemented by the owner of it.
 class MessageDispatcher {
  public:
   virtual void SendMessage(std::string msg) = 0;
@@ -26,6 +30,8 @@ class Stitching{
   // homography can be retrieved using homography(). InitialiseOpenCV() must
   // have been called and succeeded previously.
   bool CalculateHomography();
+
+  void PostUpdateMessage(const char* message_name, double value);
 
   const char* GetOpenCVVersion() const { return CV_VERSION; }
   const cv::Mat&  homography() const { return homography_; }
